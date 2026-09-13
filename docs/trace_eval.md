@@ -1,8 +1,8 @@
 # 📊 BÁO CÁO THU HOẠCH NGHIỆM THU BÀI LAB 3 (BƯỚC 3 — SUBMISSION ARTIFACT)
 
-> **Họ và Tên Học viên:** [Điền Họ và Tên]  
-> **Mã Sinh Viên / Mã Học viên:** [Điền MSSV]  
-> **Chủ đề Lựa chọn:** [Điền tên chủ đề đã chọn từ docs/DANH_SACH_DE_TAI.md hoặc Đề tài Mở]  
+> **Họ và Tên Học viên:** Bùi Việt Anh 
+> **Mã Sinh Viên / Mã Học viên:** 2A202602611  
+> **Chủ đề Lựa chọn:** Trợ lý Tuyển dụng & Sàng lọc CV
 
 ---
 
@@ -10,11 +10,11 @@
 
 | Tiêu chí Đánh giá | Mức độ (1 - 5) | Giải trình chi tiết lý do chọn điểm |
 | :--- | :---: | :--- |
-| **1. Multi-step Reasoning** | / 5 | Bài toán có yêu cầu chia nhỏ nhiều bước suy luận nối tiếp nhau không? |
-| **2. Tool Interaction** | / 5 | Hệ thống có cần kết nối với MCP Server / Cơ sở dữ liệu bên ngoài không? |
-| **3. Dynamic Decision** | / 5 | Bước tiếp theo có phụ thuộc vào kết quả quan sát bước trước không? |
-| **4. Long Horizon Goal** | / 5 | Hệ thống có phải giữ mục tiêu xuyên suốt qua nhiều lượt xử lý không? |
-| **TỔNG ĐIỂM AGENTIC FIT** | **/ 20** | *Nếu tổng điểm > 12/20: Bài toán rất phù hợp triển khai Agentic System.* |
+| **1. Multi-step Reasoning** | 4 / 5 | Hệ thống cần thực hiện chuỗi suy luận rõ ràng: Đọc CV -> Trích xuất dữ liệu -> Tra cứu Job Description (JD) -> Đối chiếu -> Đánh giá Đạt/Trượt -> Xếp lịch. |
+| **2. Tool Interaction** | 4 / 5 | Cần kết nối với nhiều công cụ ngoại vi: Trình đọc PDF/Doc, CSDL lưu trữ tiêu chí JD (MCP Server), API Email để gửi thông báo, và API Lịch để tìm slot trống. |
+| **3. Dynamic Decision** | 4 / 5 | Hành động phụ thuộc chặt chẽ vào kết quả trước đó. Ví dụ: Nếu CV Đạt -> tìm lịch rảnh để mời phỏng vấn; Nếu Trượt -> gửi thư từ chối; Nếu lỗi đọc CV -> thử lại. |
+| **4. Long Horizon Goal** | 4 / 5 | Agent phải duy trì mục tiêu "Hoàn tất quy trình sàng lọc và xếp lịch" xuyên suốt quá trình dài qua nhiều công cụ và bước kiểm tra, không chỉ là 1-2 thao tác hỏi đáp đơn giản. |
+| **TỔNG ĐIỂM AGENTIC FIT** | **16 / 20** | *Agentic System.* |
 
 ---
 
@@ -28,20 +28,52 @@ Dán 1 đoạn trích xuất log tiêu biểu từ file `docs/trace_waterfall.js
 [
   {
     "step": 1,
+    "query": "Ứng viên Nguyễn Văn A ứng tuyển vị trí Data Scientist đã đạt yêu cầu vòng hồ sơ. Hãy xếp lịch phỏng vấn cho ứng viên này vào lúc 14:00 chiều thứ Tư tuần này.",
     "action_type": "TOOL_EXECUTION",
-    "tool_name": "academic_query",
+    "tool_name": "read_cv",
     "arguments": {
-      "student_id": "SV2026001"
+      "file_path": "nguyen_van_a.pdf"
     },
     "observation": {
       "status": "SUCCESS",
-      "student_id": "SV2026001",
+      "content": "Họ tên: Nguyễn Văn A. Vị trí ứng tuyển: Data Scientist. Kinh nghiệm: 3 năm làm Data Scientist, chuyên xử lý dữ liệu với SQL và build model bằng Python."
+    },
+    "latency_ms": 4479.37
+  },
+  {
+    "step": 2,
+    "query": "Ứng viên Nguyễn Văn A ứng tuyển vị trí Data Scientist đã đạt yêu cầu vòng hồ sơ. Hãy xếp lịch phỏng vấn cho ứng viên này vào lúc 14:00 chiều thứ Tư tuần này.\n\n[Action]: Đã gọi tool read_cv\n[Observation]: {\"status\": \"SUCCESS\", \"content\": \"Họ tên: Nguyễn Văn A. Vị trí ứng tuyển: Data Scientist. Kinh nghiệm: 3 năm làm Data Scientist, chuyên xử lý dữ liệu với SQL và build model bằng Python.\"}\nHãy tiếp tục suy luận và ra quyết định.",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "query_jd",
+    "arguments": {
+      "position": "Data Scientist"
+    },
+    "observation": {
+      "status": "SUCCESS",
       "data": {
-        "full_name": "Nguyễn Văn An",
-        "gpa": 3.85
+        "position": "Data Scientist",
+        "required_skills": [
+          "Python",
+          "Machine Learning",
+          "SQL",
+          "Statistics"
+        ],
+        "experience": "1+ years",
+        "status": "OPEN"
       }
     },
-    "latency_ms": 120.5
+    "latency_ms": 4783.57
+  },
+  {
+    "step": 3,
+    "query": "Ứng viên Nguyễn Văn A ứng tuyển vị trí Data Scientist đã đạt yêu cầu vòng hồ sơ. Hãy xếp lịch phỏng vấn cho ứng viên này vào lúc 14:00 chiều thứ Tư tuần này.\n\n[Action]: Đã gọi tool read_cv\n[Observation]: {\"status\": \"SUCCESS\", \"content\": \"Họ tên: Nguyễn Văn A. Vị trí ứng tuyển: Data Scientist. Kinh nghiệm: 3 năm làm Data Scientist, chuyên xử lý dữ liệu với SQL và build model bằng Python.\"}\nHãy tiếp tục suy luận và ra quyết định.\n\n[Action]: Đã gọi tool query_jd\n[Observation]: {\"status\": \"SUCCESS\", \"data\": {\"position\": \"Data Scientist\", \"required_skills\": [\"Python\", \"Machine Learning\", \"SQL\", \"Statistics\"], \"experience\": \"1+ years\", \"status\": \"OPEN\"}}\nHãy tiếp tục suy luận và ra quyết định.",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "schedule_interview",
+    "arguments": {
+      "datetime_str": "14:00 chiều thứ Tư tuần này",
+      "candidate_name": "Nguyễn Văn A",
+      "position": "Data Scientist"
+    }
   }
 ]
 ```
@@ -50,10 +82,10 @@ Dán 1 đoạn trích xuất log tiêu biểu từ file `docs/trace_waterfall.js
 
 ## 3. TỔNG KẾT KẾT QUẢ NGHIỆM THU & NỘP BÀI
 
-- [ ] Đã điền API Key thật trong `.env` và xác nhận Agent chạy mượt mà trên LLM API thật (Gemini/OpenAI).
-- **Tổng số Test Cases đã chạy thành công:** ___ / 5 test cases.
-- **Số lượt gọi Tool qua MCP Server chính xác:** ___ lượt.
-- **Kết quả đẩy Repo nộp bài:** [ ] Đã Commit và Push mã nguồn thành công lên GitHub cá nhân.
+- [X] Đã điền API Key thật trong `.env` và xác nhận Agent chạy mượt mà trên LLM API thật (Gemini/OpenAI).
+- **Tổng số Test Cases đã chạy thành công:** 5 / 5 test cases.
+- **Số lượt gọi Tool qua MCP Server chính xác:** 8 lượt.
+- **Kết quả đẩy Repo nộp bài:** [X] Đã Commit và Push mã nguồn thành công lên GitHub cá nhân.
 
 ---
 

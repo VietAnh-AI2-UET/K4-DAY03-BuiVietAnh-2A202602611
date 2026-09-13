@@ -1,5 +1,5 @@
 """
-🚀 CORE AGENT APPLICATION (DAY 03: CHATBOT VS REACT AGENT)
+🚀 CORE AGENT APPLICATION (HR CV SCREENING AGENT)
 Thực thi so sánh giữa Chatbot Baseline (Cấp 2) và ReAct Agent kết nối MCP Server (Cấp 3).
 """
 
@@ -17,7 +17,7 @@ if sys.stdout.encoding != 'utf-8':
     except Exception:
         pass
 
-from mcp_server import MCPAcademicServer
+from mcp_server import MCPAcademicServer # Vẫn giữ nguyên tên Class import để tránh lỗi, nhưng ngữ cảnh là HR
 from prompts import (
     CHATBOT_BASELINE_PROMPT,
     REACT_AGENT_SYSTEM_PROMPT,
@@ -35,7 +35,6 @@ def load_test_cases():
         example_path = os.path.join(base_dir, "config", "test_cases.example.json")
         if os.path.exists(example_path):
             print("⚠️ [CONFIG NOTICE]: Chưa thấy file 'config/test_cases.json'. Đang dùng mẫu 'config/test_cases.example.json'.")
-            print("👉 Hãy chạy: copy config/test_cases.example.json config/test_cases.json và viết test cases theo đề tài của bạn!\n")
             config_path = example_path
         else:
             config_path = "test_cases.json"
@@ -66,11 +65,12 @@ def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) ->
     [REACT AGENT LOOP] Thực thi vòng lặp Thought -> Action -> Observation với MCP Server
     Trả về danh sách trace log của phiên thực thi.
     """
-    print(f"\n🤖 [REACT AGENT] Câu hỏi: {user_query}")
+    print(f"\n🤖 [REACT AGENT] Câu hỏi ban đầu: {user_query}")
     
     step = 0
     trace_logs = []
     tools_list = mcp_server.list_tools()
+    current_prompt = user_query  # Biến lưu trữ ngữ cảnh hội thoại qua các vòng lặp
     
     while step < MAX_ITERATIONS:
         step += 1
@@ -78,25 +78,25 @@ def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) ->
         print(f"\n--- 🔄 Vòng lặp ReAct Loop (Step {step}/{MAX_ITERATIONS}) ---")
         
         # Gọi LLM với Native Tool Calling Specs
-        llm_response = provider.generate_with_tools(user_query, tools_list, system_prompt=REACT_AGENT_SYSTEM_PROMPT)
+        llm_response = provider.generate_with_tools(current_prompt, tools_list, system_prompt=REACT_AGENT_SYSTEM_PROMPT)
         latency_ms = round((time.time() - step_start_time) * 1000, 2)
         
         thought = llm_response.get("thought", "Đang suy luận...")
         print(f"🧠 [Thought]: {thought}")
         
-        # Trường hợp 1: LLM quyết định trả lời bằng văn bản trực tiếp
+        # Trường hợp 1: LLM quyết định trả lời bằng văn bản trực tiếp (Kết thúc quá trình suy luận)
         if llm_response.get("type") == "text":
             final_content = llm_response.get("content", "")
             print(f"🏁 [Final Answer]: {final_content}")
             trace_logs.append({
                 "step": step,
-                "query": user_query,
+                "query": current_prompt,
                 "action_type": "FINAL_ANSWER",
                 "thought": thought,
                 "output": final_content,
                 "latency_ms": latency_ms
             })
-            break
+            break  # Hoàn thành, thoát khỏi vòng lặp ReAct
             
         # Trường hợp 2: LLM đề xuất gọi Tool (Action)
         elif llm_response.get("type") == "tool_call":
@@ -111,33 +111,15 @@ def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) ->
             
             if not obs_data:
                 print(f"👁️ [Observation từ MCP Server]: {{}}")
-                print(f"⚠️ [CHÚ Ý]: MCP Server trả về kết quả rỗng! Học viên cần hoàn thành TODO 2.1 trong 'src/mcp_server.py'.")
-                final_answer = "Chưa thể trả lời chi tiết do chưa nhận được dữ liệu từ MCP Server (hãy hoàn thành TODO 2.1)."
+                print(f"⚠️ [CHÚ Ý]: MCP Server trả về kết quả rỗng!")
+                obs_str = "Lỗi: Không nhận được dữ liệu từ MCP Server."
             else:
                 obs_str = json.dumps(obs_data, ensure_ascii=False)
                 print(f"👁️ [Observation từ MCP Server]: {obs_str}")
                 
-                # Tổng hợp Final Answer từ kết quả Observation thực tế
-                if obs_data.get("status") == "SUCCESS":
-                    if "data" in obs_data:
-                        d = obs_data["data"]
-                        final_answer = (
-                            f"Kết quả tra cứu cho sinh viên {obs_data.get('student_id', '')} ({d.get('full_name', '')}): "
-                            f"Lớp {d.get('class', '')}, GPA: {d.get('gpa', '')}, Email: {d.get('email', '')}, "
-                            f"Trạng thái: {d.get('status', '')}, Cố vấn: {d.get('advisor', '')}."
-                        )
-                    elif "message" in obs_data:
-                        final_answer = obs_data["message"]
-                    else:
-                        final_answer = f"Đã hoàn tất xử lý qua MCP Server: {json.dumps(obs_data, ensure_ascii=False)}"
-                elif obs_data.get("status") == "NOT_FOUND":
-                    final_answer = obs_data.get("message", "Không tìm thấy thông tin sinh viên yêu cầu.")
-                else:
-                    final_answer = f"Phản hồi từ công cụ: {json.dumps(obs_data, ensure_ascii=False)}"
-            
             trace_logs.append({
                 "step": step,
-                "query": user_query,
+                "query": current_prompt,
                 "action_type": "TOOL_EXECUTION",
                 "tool_name": tool_name,
                 "arguments": arguments,
@@ -145,47 +127,36 @@ def run_react_agent(user_query: str, provider, mcp_server: MCPAcademicServer) ->
                 "latency_ms": latency_ms
             })
             
-            # Kết thúc vòng lặp sau khi hoàn tất Observation và xuất Final Answer
-            print(f"🧠 [Thought]: Đã nhận được dữ liệu từ MCP Server. Tổng hợp kết quả phản hồi.")
-            print(f"🏁 [Final Answer]: {final_answer}")
-            
-            trace_logs.append({
-                "step": step + 1,
-                "query": user_query,
-                "action_type": "FINAL_ANSWER",
-                "thought": "Tổng hợp kết quả từ MCP Server thành công.",
-                "output": final_answer,
-                "latency_ms": 10.0
-            })
-            break
+            # [QUAN TRỌNG] Đưa kết quả Observation vào prompt hiện tại để LLM tiếp tục vòng lặp suy luận mới!
+            current_prompt += f"\n\n[Action]: Đã gọi tool {tool_name}\n[Observation]: {obs_str}\nHãy tiếp tục suy luận và ra quyết định."
 
     return trace_logs
 
 
 if __name__ == "__main__":
     print("==========================================================")
-    print("🏫 VINUNI AI COURSE - DAY 03 LAB: CHATBOT VS REACT AGENT")
+    print("🏢 HR AI SYSTEM - TRỢ LÝ SÀNG LỌC CV & ĐẶT LỊCH PHỎNG VẤN")
     print("==========================================================")
     
     provider = get_llm_provider()
     mcp_server = MCPAcademicServer()
     
     print(f"🔌 LLM Provider: {provider.__class__.__name__}")
-    print(f"🌐 MCP Server: {mcp_server.server_name}\n")
+    print(f"🌐 MCP Server: HR-Recruitment-Server\n")
     
     tests = load_test_cases()
     print(f"✅ Đã tải thành công {len(tests)} Test Cases thử nghiệm.\n")
     
     if "--interactive" in sys.argv:
-        print("🎮 [INTERACTIVE MODE] Trò chuyện trực tiếp với ReAct Agent:")
+        print("🎮 [INTERACTIVE MODE] Trò chuyện trực tiếp với HR ReAct Agent:")
         print("💡 Gợi ý câu hỏi thử nghiệm:")
-        print("   - Câu hỏi chung: 'Quy chế học vụ VinUni yêu cầu bao nhiêu tín chỉ?'")
-        print("   - Tra cứu học vụ: 'Hãy tra cứu thông tin học vụ của sinh viên SV2026001'")
-        print("   - Đặt lịch hẹn: 'Đặt lịch hẹn tư vấn cho SV2026001 vào 14:00 ngày 15/09/2026'")
+        print("   - Câu hỏi chung: 'Quy trình tuyển dụng chuẩn của công ty là gì?'")
+        print("   - Tra cứu JD: 'Hãy tra cứu tiêu chí JD cho vị trí Backend Developer'")
+        print("   - Đánh giá CV (Đa bước): 'Hãy đọc CV tran_van_b.pdf, đối chiếu JD Backend Developer và tự xếp lịch phỏng vấn nếu đạt.'")
         print("   - Gõ 'exit' hoặc 'quit' để kết thúc phiên trò chuyện.\n")
         while True:
             try:
-                user_input = input("👤 Sinh viên hỏi: ").strip()
+                user_input = input("👤 Nhà tuyển dụng (HR): ").strip()
                 if not user_input or user_input.lower() in ["exit", "quit"]:
                     print("👋 Tạm biệt! Kết thúc phiên trò chuyện.")
                     break
@@ -197,7 +168,6 @@ if __name__ == "__main__":
     elif "--all" in sys.argv:
         print("🚀 [TEST SUITE MODE] Kiểm tra 5 Test Cases:")
         completed_count = 0
-        todo_count = 0
         all_traces = []
         
         for tc in tests:
@@ -205,18 +175,12 @@ if __name__ == "__main__":
             print(f"🧪 [{tc['id']}] Loại test: {tc['type']} (Độ phức tạp: {tc['complexity']})")
             print(f"📌 Kỳ vọng: {tc['expected_behavior']}")
             
-            if tc["question"].strip().startswith("TODO"):
-                print(f"⏸️ [CHƯA KÍCH HOẠT - ĐANG LÀ TODO]:")
-                print(f"   {tc['question']}")
-                print(f"   👉 Hãy mở file 'config/test_cases.json' để viết câu hỏi thực tế cho Test Case này!")
-                todo_count += 1
-            else:
-                logs = run_react_agent(tc["question"], provider, mcp_server)
-                all_traces.extend(logs)
-                completed_count += 1
+            logs = run_react_agent(tc["question"], provider, mcp_server)
+            all_traces.extend(logs)
+            completed_count += 1
                 
         print(f"\n==================================================")
-        print(f"📊 [KẾT QUẢ TEST SUITE]: Đã thực thi {completed_count}/{len(tests)} Test Cases | {todo_count} Test Cases đang chờ điền câu hỏi (TODO)")
+        print(f"📊 [KẾT QUẢ TEST SUITE]: Đã thực thi {completed_count}/{len(tests)} Test Cases")
         if all_traces:
             save_waterfall_trace(all_traces)
         print(f"💡 Để trò chuyện trực tiếp từng câu: Chạy 'python src/app.py --interactive'")
@@ -226,8 +190,8 @@ if __name__ == "__main__":
         print("  1. Chat trực tiếp liên tục:   python src/app.py --interactive")
         print("  2. Chạy toàn bộ Test Cases:    python src/app.py --all\n")
         
-        sample_query = tests[1]["question"]
-        print(f"--- 🏁 DEMO CHẠY THỬ 1 TEST CASE MẪU (TC02: Tra cứu học vụ) ---")
+        sample_query = tests[3]["question"] # Chạy demo câu hỏi khó nhất (Multi-step)
+        print(f"--- 🏁 DEMO CHẠY THỬ 1 TEST CASE MẪU (TC04: Sàng lọc CV đa bước) ---")
         logs = run_react_agent(sample_query, provider, mcp_server)
         save_waterfall_trace(logs)
         print("\n💡 Hãy thử ngay lệnh: python src/app.py --interactive để chat trực tiếp!")

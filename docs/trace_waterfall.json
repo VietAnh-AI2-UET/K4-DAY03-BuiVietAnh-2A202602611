@@ -1,29 +1,201 @@
 [
   {
     "step": 1,
-    "query": "Chào bạn, bạn có thể giới thiệu quy chế học vụ cơ bản của Đại học VinUni không?",
+    "query": "Chào bạn, quy trình sàng lọc CV chuẩn của công ty chúng ta bao gồm những bước nào?",
     "action_type": "FINAL_ANSWER",
-    "thought": "Câu hỏi chung về quy chế học vụ, trả lời trực tiếp không cần gọi Tool.",
-    "output": "[Mock Agent Response]: Xin chào! Quy chế học vụ VinUni yêu cầu sinh viên tích lũy tối thiểu 120 tín chỉ và duy trì GPA trên 2.0 để tốt nghiệp.",
-    "latency_ms": 2845.93
+    "thought": "Gemini phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
+    "output": "Chào bạn, quy trình sàng lọc CV chuẩn của hệ thống/công ty chúng ta được thực hiện tự động và minh bạch qua 4 bước chính sau:\n\n1. **Bước 1: Đọc và trích xuất dữ liệu CV (CV Extraction)**\n   * Đọc nội dung file CV của ứng viên để lấy thông tin thực tế về học vấn, kinh nghiệm làm việc, kỹ năng chuyên môn và dự án đã tham gia.\n\n2. **Bước 2: Tra cứu yêu cầu công việc (JD Querying)**\n   * Truy xuất thông tin Job Description (JD) của vị trí ứng tuyển để xác định chính xác các tiêu chí bắt buộc (kỹ năng tối thiểu, số năm kinh nghiệm, bằng cấp,...) và tiêu chí ưu tiên.\n\n3. **Bước 3: Đối chiếu và Đánh giá (Matching & Evaluation)**\n   * Đưa ra so sánh chi tiết giữa thông tin trong CV và tiêu chí JD.\n   * Đảm bảo tính khách quan và chống tự suy đoán (không bịa đặt thông tin chưa có trong CV/JD).\n\n4. **Bước 4: Ra quyết định và Xử lý tiếp theo (Decision & Scheduling)**\n   * **Nếu ĐẠT:** Hệ thống sẽ tự động tiến hành lên lịch phỏng vấn cho ứng viên theo thời gian phù hợp và gửi xác nhận.\n   * **Nếu KHÔNG ĐẠT:** Hệ thống sẽ không đặt lịch phỏng vấn và cung cấp lý do từ chối rõ ràng dựa trên các điểm chưa đáp ứng yêu cầu JD.",
+    "latency_ms": 6322.46
   },
   {
     "step": 1,
-    "query": "Hãy tra cứu thông tin học vụ của sinh viên SV2026001.",
+    "query": "Hãy tra cứu các tiêu chí tuyển dụng bắt buộc cho vị trí AI Engineer giúp tôi.",
     "action_type": "TOOL_EXECUTION",
-    "tool_name": "academic_query",
+    "tool_name": "query_jd",
     "arguments": {
-      "student_id": "SV2026001"
+      "position": "AI Engineer"
     },
-    "observation": {},
-    "latency_ms": 799.12
+    "observation": {
+      "status": "SUCCESS",
+      "data": {
+        "position": "AI Engineer",
+        "required_skills": [
+          "Python",
+          "PyTorch",
+          "TensorFlow",
+          "Audio Processing"
+        ],
+        "experience": "2+ years",
+        "status": "OPEN"
+      }
+    },
+    "latency_ms": 2402.83
   },
   {
     "step": 2,
-    "query": "Hãy tra cứu thông tin học vụ của sinh viên SV2026001.",
+    "query": "Hãy tra cứu các tiêu chí tuyển dụng bắt buộc cho vị trí AI Engineer giúp tôi.\n\n[Action]: Đã gọi tool query_jd\n[Observation]: {\"status\": \"SUCCESS\", \"data\": {\"position\": \"AI Engineer\", \"required_skills\": [\"Python\", \"PyTorch\", \"TensorFlow\", \"Audio Processing\"], \"experience\": \"2+ years\", \"status\": \"OPEN\"}}\nHãy tiếp tục suy luận và ra quyết định.",
     "action_type": "FINAL_ANSWER",
-    "thought": "Tổng hợp kết quả từ MCP Server thành công.",
-    "output": "Chưa thể trả lời chi tiết do chưa nhận được dữ liệu từ MCP Server (hãy hoàn thành TODO 2.1).",
-    "latency_ms": 10.0
+    "thought": "Gemini phản hồi trực tiếp bằng văn bản (không cần gọi công cụ).",
+    "output": "Dựa trên thông tin tra cứu từ Job Description (JD) cho vị trí **AI Engineer**, dưới đây là các tiêu chí tuyển dụng bắt buộc:\n\n* **Vị trí:** AI Engineer\n* **Trạng thái:** Đang mở tuyển dụng (OPEN)\n* **Yêu cầu kinh nghiệm:** Tối thiểu 2 năm kinh nghiệm (2+ years)\n* **Kỹ năng bắt buộc (Required Skills):**\n  * Python\n  * PyTorch\n  * TensorFlow\n  * Xử lý âm thanh (Audio Processing)\n\nNếu bạn có file CV của ứng viên cần đánh giá cho vị trí này, vui lòng cung cấp tên file CV để tôi tiếp tục quy trình sàng lọc và đối chiếu.",
+    "latency_ms": 4403.56
+  },
+  {
+    "step": 1,
+    "query": "Ứng viên Nguyễn Văn A ứng tuyển vị trí Data Scientist đã đạt yêu cầu vòng hồ sơ. Hãy xếp lịch phỏng vấn cho ứng viên này vào lúc 14:00 chiều thứ Tư tuần này.",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "read_cv",
+    "arguments": {
+      "file_path": "nguyen_van_a.pdf"
+    },
+    "observation": {
+      "status": "SUCCESS",
+      "content": "Họ tên: Nguyễn Văn A. Vị trí ứng tuyển: Data Scientist. Kinh nghiệm: 3 năm làm Data Scientist, chuyên xử lý dữ liệu với SQL và build model bằng Python."
+    },
+    "latency_ms": 4479.37
+  },
+  {
+    "step": 2,
+    "query": "Ứng viên Nguyễn Văn A ứng tuyển vị trí Data Scientist đã đạt yêu cầu vòng hồ sơ. Hãy xếp lịch phỏng vấn cho ứng viên này vào lúc 14:00 chiều thứ Tư tuần này.\n\n[Action]: Đã gọi tool read_cv\n[Observation]: {\"status\": \"SUCCESS\", \"content\": \"Họ tên: Nguyễn Văn A. Vị trí ứng tuyển: Data Scientist. Kinh nghiệm: 3 năm làm Data Scientist, chuyên xử lý dữ liệu với SQL và build model bằng Python.\"}\nHãy tiếp tục suy luận và ra quyết định.",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "query_jd",
+    "arguments": {
+      "position": "Data Scientist"
+    },
+    "observation": {
+      "status": "SUCCESS",
+      "data": {
+        "position": "Data Scientist",
+        "required_skills": [
+          "Python",
+          "Machine Learning",
+          "SQL",
+          "Statistics"
+        ],
+        "experience": "1+ years",
+        "status": "OPEN"
+      }
+    },
+    "latency_ms": 4783.57
+  },
+  {
+    "step": 3,
+    "query": "Ứng viên Nguyễn Văn A ứng tuyển vị trí Data Scientist đã đạt yêu cầu vòng hồ sơ. Hãy xếp lịch phỏng vấn cho ứng viên này vào lúc 14:00 chiều thứ Tư tuần này.\n\n[Action]: Đã gọi tool read_cv\n[Observation]: {\"status\": \"SUCCESS\", \"content\": \"Họ tên: Nguyễn Văn A. Vị trí ứng tuyển: Data Scientist. Kinh nghiệm: 3 năm làm Data Scientist, chuyên xử lý dữ liệu với SQL và build model bằng Python.\"}\nHãy tiếp tục suy luận và ra quyết định.\n\n[Action]: Đã gọi tool query_jd\n[Observation]: {\"status\": \"SUCCESS\", \"data\": {\"position\": \"Data Scientist\", \"required_skills\": [\"Python\", \"Machine Learning\", \"SQL\", \"Statistics\"], \"experience\": \"1+ years\", \"status\": \"OPEN\"}}\nHãy tiếp tục suy luận và ra quyết định.",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "schedule_interview",
+    "arguments": {
+      "datetime_str": "14:00 chiều thứ Tư tuần này",
+      "candidate_name": "Nguyễn Văn A",
+      "position": "Data Scientist"
+    },
+    "observation": {
+      "status": "SUCCESS",
+      "booking_id": "INT-NguyễnVănA-99",
+      "candidate": "Nguyễn Văn A",
+      "datetime": "14:00 chiều thứ Tư tuần này",
+      "position": "Data Scientist",
+      "message": "Hệ thống đã tự động gửi email đặt lịch phỏng vấn cho ứng viên Nguyễn Văn A (Vị trí Data Scientist) vào lúc 14:00 chiều thứ Tư tuần này."
+    },
+    "latency_ms": 4520.43
+  },
+  {
+    "step": 4,
+    "query": "Ứng viên Nguyễn Văn A ứng tuyển vị trí Data Scientist đã đạt yêu cầu vòng hồ sơ. Hãy xếp lịch phỏng vấn cho ứng viên này vào lúc 14:00 chiều thứ Tư tuần này.\n\n[Action]: Đã gọi tool read_cv\n[Observation]: {\"status\": \"SUCCESS\", \"content\": \"Họ tên: Nguyễn Văn A. Vị trí ứng tuyển: Data Scientist. Kinh nghiệm: 3 năm làm Data Scientist, chuyên xử lý dữ liệu với SQL và build model bằng Python.\"}\nHãy tiếp tục suy luận và ra quyết định.\n\n[Action]: Đã gọi tool query_jd\n[Observation]: {\"status\": \"SUCCESS\", \"data\": {\"position\": \"Data Scientist\", \"required_skills\": [\"Python\", \"Machine Learning\", \"SQL\", \"Statistics\"], \"experience\": \"1+ years\", \"status\": \"OPEN\"}}\nHãy tiếp tục suy luận và ra quyết định.\n\n[Action]: Đã gọi tool schedule_interview\n[Observation]: {\"status\": \"SUCCESS\", \"booking_id\": \"INT-NguyễnVănA-99\", \"candidate\": \"Nguyễn Văn A\", \"datetime\": \"14:00 chiều thứ Tư tuần này\", \"position\": \"Data Scientist\", \"message\": \"Hệ thống đã tự động gửi email đặt lịch phỏng vấn cho ứng viên Nguyễn Văn A (Vị trí Data Scientist) vào lúc 14:00 chiều thứ Tư tuần này.\"}\nHãy tiếp tục suy luận và ra quyết định.",
+    "action_type": "FINAL_ANSWER",
+    "thought": "Đã có đủ dữ liệu từ CV và JD, dừng gọi Tool và đưa ra kết luận cuối cùng.",
+    "output": "[Mock Agent Response]: Dựa vào CV và JD, tôi đã đối chiếu xong. Quá trình sàng lọc hoàn tất.",
+    "latency_ms": 627.38
+  },
+  {
+    "step": 1,
+    "query": "Hãy đọc CV của ứng viên Trần Văn B (file tran_van_b.pdf) ứng tuyển vị trí Backend Developer. Hãy đánh giá xem CV có khớp với JD không, nếu Đạt thì tự động xếp lịch phỏng vấn vào sáng thứ Sáu tuần này.",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "read_cv",
+    "arguments": {
+      "file_path": "tran_van_b.pdf"
+    },
+    "observation": {
+      "status": "SUCCESS",
+      "content": "Họ tên: Trần Văn B. Vị trí ứng tuyển: Backend Developer. Kinh nghiệm: 4 năm làm Java, Spring Boot, thiết kế hệ thống Microservices, tối ưu CSDL PostgreSQL và sử dụng Redis caching tại công ty TechVN."
+    },
+    "latency_ms": 646.76
+  },
+  {
+    "step": 2,
+    "query": "Hãy đọc CV của ứng viên Trần Văn B (file tran_van_b.pdf) ứng tuyển vị trí Backend Developer. Hãy đánh giá xem CV có khớp với JD không, nếu Đạt thì tự động xếp lịch phỏng vấn vào sáng thứ Sáu tuần này.\n\n[Action]: Đã gọi tool read_cv\n[Observation]: {\"status\": \"SUCCESS\", \"content\": \"Họ tên: Trần Văn B. Vị trí ứng tuyển: Backend Developer. Kinh nghiệm: 4 năm làm Java, Spring Boot, thiết kế hệ thống Microservices, tối ưu CSDL PostgreSQL và sử dụng Redis caching tại công ty TechVN.\"}\nHãy tiếp tục suy luận và ra quyết định.",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "query_jd",
+    "arguments": {
+      "position": "Backend Developer"
+    },
+    "observation": {
+      "status": "SUCCESS",
+      "data": {
+        "position": "Backend Developer",
+        "required_skills": [
+          "Java",
+          "Spring Boot",
+          "Microservices",
+          "PostgreSQL",
+          "Redis"
+        ],
+        "experience": "3+ years",
+        "status": "OPEN"
+      }
+    },
+    "latency_ms": 738.01
+  },
+  {
+    "step": 3,
+    "query": "Hãy đọc CV của ứng viên Trần Văn B (file tran_van_b.pdf) ứng tuyển vị trí Backend Developer. Hãy đánh giá xem CV có khớp với JD không, nếu Đạt thì tự động xếp lịch phỏng vấn vào sáng thứ Sáu tuần này.\n\n[Action]: Đã gọi tool read_cv\n[Observation]: {\"status\": \"SUCCESS\", \"content\": \"Họ tên: Trần Văn B. Vị trí ứng tuyển: Backend Developer. Kinh nghiệm: 4 năm làm Java, Spring Boot, thiết kế hệ thống Microservices, tối ưu CSDL PostgreSQL và sử dụng Redis caching tại công ty TechVN.\"}\nHãy tiếp tục suy luận và ra quyết định.\n\n[Action]: Đã gọi tool query_jd\n[Observation]: {\"status\": \"SUCCESS\", \"data\": {\"position\": \"Backend Developer\", \"required_skills\": [\"Java\", \"Spring Boot\", \"Microservices\", \"PostgreSQL\", \"Redis\"], \"experience\": \"3+ years\", \"status\": \"OPEN\"}}\nHãy tiếp tục suy luận và ra quyết định.",
+    "action_type": "FINAL_ANSWER",
+    "thought": "Đã có đủ dữ liệu từ CV và JD, dừng gọi Tool và đưa ra kết luận cuối cùng.",
+    "output": "[Mock Agent Response]: Dựa vào CV và JD, tôi đã đối chiếu xong. Quá trình sàng lọc hoàn tất.",
+    "latency_ms": 744.56
+  },
+  {
+    "step": 1,
+    "query": "Hãy đọc và đánh giá CV của ứng viên Lê Văn C (file le_van_c.pdf) ứng tuyển vị trí Data Scientist. Nếu CV đáp ứng được tiêu chí thì mới xếp lịch phỏng vấn.",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "read_cv",
+    "arguments": {
+      "file_path": "le_van_c.pdf"
+    },
+    "observation": {
+      "status": "SUCCESS",
+      "content": "Họ tên: Lê Văn C. Vị trí ứng tuyển: Data Scientist. Kinh nghiệm: 2 năm làm Kế toán trưởng, chuyên sử dụng phần mềm kế toán và Excel, không biết lập trình Python hay SQL."
+    },
+    "latency_ms": 727.47
+  },
+  {
+    "step": 2,
+    "query": "Hãy đọc và đánh giá CV của ứng viên Lê Văn C (file le_van_c.pdf) ứng tuyển vị trí Data Scientist. Nếu CV đáp ứng được tiêu chí thì mới xếp lịch phỏng vấn.\n\n[Action]: Đã gọi tool read_cv\n[Observation]: {\"status\": \"SUCCESS\", \"content\": \"Họ tên: Lê Văn C. Vị trí ứng tuyển: Data Scientist. Kinh nghiệm: 2 năm làm Kế toán trưởng, chuyên sử dụng phần mềm kế toán và Excel, không biết lập trình Python hay SQL.\"}\nHãy tiếp tục suy luận và ra quyết định.",
+    "action_type": "TOOL_EXECUTION",
+    "tool_name": "query_jd",
+    "arguments": {
+      "position": "Data Scientist"
+    },
+    "observation": {
+      "status": "SUCCESS",
+      "data": {
+        "position": "Data Scientist",
+        "required_skills": [
+          "Python",
+          "Machine Learning",
+          "SQL",
+          "Statistics"
+        ],
+        "experience": "1+ years",
+        "status": "OPEN"
+      }
+    },
+    "latency_ms": 641.15
+  },
+  {
+    "step": 3,
+    "query": "Hãy đọc và đánh giá CV của ứng viên Lê Văn C (file le_van_c.pdf) ứng tuyển vị trí Data Scientist. Nếu CV đáp ứng được tiêu chí thì mới xếp lịch phỏng vấn.\n\n[Action]: Đã gọi tool read_cv\n[Observation]: {\"status\": \"SUCCESS\", \"content\": \"Họ tên: Lê Văn C. Vị trí ứng tuyển: Data Scientist. Kinh nghiệm: 2 năm làm Kế toán trưởng, chuyên sử dụng phần mềm kế toán và Excel, không biết lập trình Python hay SQL.\"}\nHãy tiếp tục suy luận và ra quyết định.\n\n[Action]: Đã gọi tool query_jd\n[Observation]: {\"status\": \"SUCCESS\", \"data\": {\"position\": \"Data Scientist\", \"required_skills\": [\"Python\", \"Machine Learning\", \"SQL\", \"Statistics\"], \"experience\": \"1+ years\", \"status\": \"OPEN\"}}\nHãy tiếp tục suy luận và ra quyết định.",
+    "action_type": "FINAL_ANSWER",
+    "thought": "Đã có đủ dữ liệu từ CV và JD, dừng gọi Tool và đưa ra kết luận cuối cùng.",
+    "output": "[Mock Agent Response]: Dựa vào CV và JD, tôi đã đối chiếu xong. Quá trình sàng lọc hoàn tất.",
+    "latency_ms": 733.0
   }
 ]

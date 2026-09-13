@@ -32,31 +32,59 @@ class MockOfflineProvider(BaseLLMProvider):
         self.model_name = "Offline-Mock-Model-2026"
 
     def generate(self, prompt: str, system_prompt: str = "") -> str:
-        return f"[Mock Chatbot Response]: Xin chào! Tôi đã nhận được câu hỏi '{prompt}'. (Chế độ Chatbot không có Tool tra cứu dữ liệu thời gian thực)."
+        return f"[Mock Chatbot Response]: Xin chào! Tôi đã nhận được yêu cầu '{prompt}'. (Chế độ Chatbot không gọi Tool)."
 
     def generate_with_tools(self, prompt: str, tools_schema: List[Dict[str, Any]], system_prompt: str = "") -> Dict[str, Any]:
         prompt_lower = prompt.lower()
         
-        # Mô phỏng nhận diện intent gọi Tool
-        if "sv2026001" in prompt_lower and "đặt lịch" in prompt_lower:
+        # Mô phỏng nhận diện intent gọi Tool trong chuỗi ReAct (Multi-step reasoning)
+        
+        # 1. Nếu trong lịch sử (prompt) đã có kết quả trả về từ query_jd (chứa chữ "required_skills")
+        if "required_skills" in prompt_lower:
             return {
-                "type": "tool_call",
-                "tool_name": "schedule_appointment",
-                "arguments": {"student_id": "SV2026001", "datetime_str": "14:00 15/09/2026", "advisor_name": "PGS.TS Nguyễn Văn A"},
-                "thought": "Người dùng yêu cầu đặt lịch hẹn tư vấn cho sinh viên SV2026001. Tôi sẽ gọi tool schedule_appointment."
+                "type": "text",
+                "content": "[Mock Agent Response]: Dựa vào CV và JD, tôi đã đối chiếu xong. Quá trình sàng lọc hoàn tất.",
+                "thought": "Đã có đủ dữ liệu từ CV và JD, dừng gọi Tool và đưa ra kết luận cuối cùng."
             }
-        elif "sv2026001" in prompt_lower or "tra cứu" in prompt_lower:
+            
+        # 2. Nếu trong lịch sử đã có kết quả từ read_cv (chứa chữ "kinh nghiệm:")
+        if "kinh nghiệm:" in prompt_lower:
+            pos = "Backend Developer" if "backend" in prompt_lower else "Data Scientist"
             return {
                 "type": "tool_call",
-                "tool_name": "academic_query",
-                "arguments": {"student_id": "SV2026001"},
-                "thought": "Người dùng muốn tra cứu thông tin học vụ của sinh viên SV2026001. Tôi sẽ gọi tool academic_query."
+                "tool_name": "query_jd",
+                "arguments": {"position": pos},
+                "thought": f"Đã đọc xong CV. Bây giờ cần tra cứu JD cho vị trí {pos} để đối chiếu."
+            }
+
+        # 3. Xử lý các câu hỏi (lượt đầu tiên)
+        if "tran_van_b.pdf" in prompt_lower or "le_van_c.pdf" in prompt_lower:
+            filename = "tran_van_b.pdf" if "tran_van_b" in prompt_lower else "le_van_c.pdf"
+            return {
+                "type": "tool_call",
+                "tool_name": "read_cv",
+                "arguments": {"file_path": filename},
+                "thought": f"Người dùng yêu cầu đánh giá CV. Tôi phải gọi tool read_cv để đọc nội dung file {filename} trước."
+            }
+        elif "xếp lịch" in prompt_lower and "nguyễn văn a" in prompt_lower:
+            return {
+                "type": "tool_call",
+                "tool_name": "schedule_interview",
+                "arguments": {"candidate_name": "Nguyễn Văn A", "datetime_str": "14:00 chiều thứ Tư", "position": "Data Scientist"},
+                "thought": "Yêu cầu xếp lịch phỏng vấn cho ứng viên đã qua vòng hồ sơ. Sẽ gọi tool schedule_interview."
+            }
+        elif "tiêu chí" in prompt_lower or "jd" in prompt_lower:
+            return {
+                "type": "tool_call",
+                "tool_name": "query_jd",
+                "arguments": {"position": "AI Engineer"},
+                "thought": "Người dùng muốn biết tiêu chí tuyển dụng. Sẽ gọi tool query_jd cho vị trí tương ứng."
             }
         else:
             return {
                 "type": "text",
-                "content": f"[Mock Agent Response]: Xin chào! Quy chế học vụ VinUni yêu cầu sinh viên tích lũy tối thiểu 120 tín chỉ và duy trì GPA trên 2.0 để tốt nghiệp.",
-                "thought": "Câu hỏi chung về quy chế học vụ, trả lời trực tiếp không cần gọi Tool."
+                "content": "[Mock Agent Response]: Quy trình sàng lọc CV chuẩn bao gồm: 1. Đọc CV -> 2. Tra cứu JD -> 3. Đối chiếu -> 4. Phỏng vấn.",
+                "thought": "Câu hỏi chung về quy trình tuyển dụng, trả lời trực tiếp không cần gọi Tool."
             }
 
 
@@ -64,7 +92,7 @@ class GeminiProvider(BaseLLMProvider):
     """Google Gemini Provider (Native Tool Calling với Google GenAI SDK)"""
     def __init__(self, api_key: str = None, model: str = None):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
-        self.model_name = model or os.getenv("LLM_MODEL") or "gemini-2.5-flash"
+        self.model_name = model or os.getenv("LLM_MODEL") or "gemini-3.6-flash"
 
     def generate(self, prompt: str, system_prompt: str = "") -> str:
         if not self.api_key or self.api_key == "your_gemini_api_key_here":

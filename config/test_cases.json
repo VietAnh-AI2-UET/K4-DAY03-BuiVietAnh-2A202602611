@@ -1,0 +1,37 @@
+[
+  {
+    "id": "TC01",
+    "type": "direct_query",
+    "question": "Chào bạn, quy trình sàng lọc CV chuẩn của công ty chúng ta bao gồm những bước nào?",
+    "expected_behavior": "Chatbot trả lời trực tiếp từ System Prompt về quy trình tuyển dụng, KHÔNG CẦN GỌI BẤT KỲ TOOL NÀO.",
+    "complexity": "Low"
+  },
+  {
+    "id": "TC02",
+    "type": "single_tool_query",
+    "question": "Hãy tra cứu các tiêu chí tuyển dụng bắt buộc cho vị trí AI Engineer giúp tôi.",
+    "expected_behavior": "Agent tự động phát sinh Tool Call 'query_jd' với tham số {\"position\": \"AI Engineer\"}.",
+    "complexity": "Medium"
+  },
+  {
+    "id": "TC03",
+    "type": "appointment_booking",
+    "question": "Ứng viên Nguyễn Văn A ứng tuyển vị trí Data Scientist đã đạt yêu cầu vòng hồ sơ. Hãy xếp lịch phỏng vấn cho ứng viên này vào lúc 14:00 chiều thứ Tư tuần này.",
+    "expected_behavior": "Agent tự động phát sinh Tool Call 'schedule_interview' với tham số {\"candidate_name\": \"Nguyễn Văn A\", \"position\": \"Data Scientist\"} và thời gian tương ứng.",
+    "complexity": "Medium"
+  },
+  {
+    "id": "TC04",
+    "type": "multi_step_reasoning",
+    "question": "Hãy đọc CV của ứng viên Trần Văn B (file tran_van_b.pdf) ứng tuyển vị trí Backend Developer. Hãy đánh giá xem CV có khớp với JD không, nếu Đạt thì tự động xếp lịch phỏng vấn vào sáng thứ Sáu tuần này.",
+    "expected_behavior": "Agent thực hiện chuỗi ReAct: (1) Gọi Tool 'read_cv' để lấy dữ liệu CV -> (2) Gọi Tool 'query_jd' lấy tiêu chí Backend Developer -> (3) Đánh giá Đạt -> (4) Gọi Tool 'schedule_interview'.",
+    "complexity": "High"
+  },
+  {
+    "id": "TC05",
+    "type": "edge_case_handling",
+    "question": "Hãy đọc và đánh giá CV của ứng viên Lê Văn C (file le_van_c.pdf) ứng tuyển vị trí Data Scientist. Nếu CV đáp ứng được tiêu chí thì mới xếp lịch phỏng vấn.",
+    "expected_behavior": "Agent gọi Tool 'read_cv' và Tool 'query_jd'. Sau khi đối chiếu, phát hiện CV không đạt (Kế toán đi xin làm Data Scientist), Agent KHÔNG GỌI Tool 'schedule_interview' và báo lý do từ chối.",
+    "complexity": "Medium"
+  }
+]
